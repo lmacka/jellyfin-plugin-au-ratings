@@ -1,0 +1,17 @@
+---
+name: "AU Ratings"
+guid: "b4c7d8e9-2345-6789-bcde-fa0123456789"
+version: "1.0.0.0"
+targetAbi: "10.11.0.0"
+framework: "net9.0"
+overview: "Manage Australian content ratings across your Jellyfin library"
+description: >
+  Dashboard for assigning AU content classifications. Auto-suggests
+  AU equivalents for foreign ratings. Integrates with Jellyfin
+  parental controls.
+category: "General"
+owner: "lmacka"
+artifacts:
+- "Jellyfin.Plugin.AuRatings.dll"
+changelog: >
+  Initial release

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>AU Ratings</title>
+</head>
+<body>
+    <div id="AuRatingsPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select" data-controller="__plugin/auratingsjs">
+        <div data-role="content">
+            <div class="content-primary">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1em;flex-wrap:wrap;gap:0.5em;">
+                    <h2 style="margin:0;">AU Ratings</h2>
+                    <div style="display:flex;gap:0.5em;">
+                        <button id="btnTableView" type="button" class="raised emby-button" style="padding:0.4em 0.8em;font-size:0.9em;">
+                            <span class="material-icons" style="font-size:1.2em;vertical-align:middle;">view_list</span> Table
+                        </button>
+                        <button id="btnCardView" type="button" class="raised emby-button" style="padding:0.4em 0.8em;font-size:0.9em;">
+                            <span class="material-icons" style="font-size:1.2em;vertical-align:middle;">view_module</span> Cards
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div id="filterBar" style="display:flex;gap:0.5em;flex-wrap:wrap;margin-bottom:1em;align-items:flex-end;">
+                    <div class="selectContainer" style="flex:0 0 auto;min-width:140px;">
+                        <label class="selectLabel" for="filterUser">Visible to</label>
+                        <select id="filterUser" is="emby-select" class="emby-select">
+                            <option value="">All (no filter)</option>
+                        </select>
+                    </div>
+                    <div class="selectContainer" style="flex:0 0 auto;min-width:120px;">
+                        <label class="selectLabel" for="filterType">Type</label>
+                        <select id="filterType" is="emby-select" class="emby-select">
+                            <option value="">All Types</option>
+                            <option value="Movie">Movie</option>
+                            <option value="Series">Series</option>
+                            <option value="Season">Season</option>
+                            <option value="Episode">Episode</option>
+                        </select>
+                    </div>
+                    <div class="selectContainer" style="flex:0 0 auto;min-width:120px;">
+                        <label class="selectLabel" for="filterRating">Current Rating</label>
+                        <select id="filterRating" is="emby-select" class="emby-select">
+                            <option value="">All Ratings</option>
+                        </select>
+                    </div>
+                    <div class="selectContainer" style="flex:0 0 auto;min-width:150px;">
+                        <label class="selectLabel" for="filterAuStatus">AU Status</label>
+                        <select id="filterAuStatus" is="emby-select" class="emby-select">
+                            <option value="">All Items</option>
+                            <option value="none">No Rating</option>
+                            <option value="noAu">Non-AU Rating</option>
+                            <option value="hasAu">Has AU Rating</option>
+                        </select>
+                    </div>
+                    <div class="selectContainer" style="flex:0 0 auto;min-width:130px;">
+                        <label class="selectLabel" for="filterSort">Sort By</label>
+                        <select id="filterSort" is="emby-select" class="emby-select">
+                            <option value="SortName">Title</option>
+                            <option value="OfficialRating">Rating</option>
+                            <option value="ProductionYear">Year</option>
+                            <option value="DateCreated">Date Added</option>
+                        </select>
+                    </div>
+                    <div class="inputContainer" style="flex:1 1 200px;min-width:150px;">
+                        <label class="inputLabel inputLabelUnfocused" for="filterSearch">Search</label>
+                        <input id="filterSearch" type="text" is="emby-input" placeholder="Search by name..." />
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div id="loadingIndicator" style="text-align:center;padding:2em;display:none;">
+                    <div class="loading-spinner"></div>
+                    <p>Loading items...</p>
+                </div>
+
+                <!-- Table View -->
+                <div id="tableView" style="display:none;">
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead>
+                            <tr style="border-bottom:2px solid rgba(255,255,255,0.1);text-align:left;">
+                                <th style="padding:0.5em;">Title</th>
+                                <th style="padding:0.5em;width:80px;">Type</th>
+                                <th style="padding:0.5em;width:100px;">Current Rating</th>
+                                <th style="padding:0.5em;width:60px;">Year</th>
+                                <th style="padding:0.5em;">AU Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Card View -->
+                <div id="cardView" style="display:none;">
+                    <div id="cardContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1em;"></div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination" style="display:flex;justify-content:center;align-items:center;gap:1em;margin-top:1.5em;padding:1em 0;">
+                    <button id="btnPrev" type="button" class="raised emby-button" style="padding:0.4em 1em;">Previous</button>
+                    <span id="pageInfo" style="font-size:0.9em;opacity:0.8;"></span>
+                    <button id="btnNext" type="button" class="raised emby-button" style="padding:0.4em 1em;">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

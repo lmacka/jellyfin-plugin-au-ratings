@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>AU Ratings</title>
+</head>
+<body>
+    <div id="AuRatingsConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select">
+        <div data-role="content">
+            <div class="content-primary">
+                <h2>AU Ratings Settings</h2>
+                <form id="AuRatingsConfigForm">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="ItemsPerPage">Items Per Page</label>
+                        <input id="ItemsPerPage" name="ItemsPerPage" type="number" is="emby-input" min="10" max="200" />
+                        <div class="fieldDescription">Number of items to show per page (10-200).</div>
+                    </div>
+                    <div class="selectContainer">
+                        <label class="selectLabel" for="DefaultView">Default View</label>
+                        <select is="emby-select" id="DefaultView" name="DefaultView" class="emby-select-withcolor emby-select">
+                            <option value="Table">Table</option>
+                            <option value="Cards">Cards</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var AuRatingsConfig = {
+                pluginUniqueId: 'b4c7d8e9-2345-6789-bcde-fa0123456789'
+            };
+
+            document.querySelector('#AuRatingsConfigPage')
+                .addEventListener('pageshow', function() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(AuRatingsConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#ItemsPerPage').value = config.ItemsPerPage;
+                        document.querySelector('#DefaultView').value = config.DefaultView;
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#AuRatingsConfigForm')
+                .addEventListener('submit', function(e) {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(AuRatingsConfig.pluginUniqueId).then(function (config) {
+                        config.ItemsPerPage = parseInt(document.querySelector('#ItemsPerPage').value, 10);
+                        config.DefaultView = document.querySelector('#DefaultView').value;
+                        ApiClient.updatePluginConfiguration(AuRatingsConfig.pluginUniqueId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+
+                    e.preventDefault();
+                    return false;
+                });
+        </script>
+    </div>
+</body>
+</html>

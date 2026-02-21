@@ -1,0 +1,90 @@
+name: Release Plugin
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. 1.0.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "version=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        run: dotnet build -c Release -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Create plugin zip
+        run: |
+          cd Jellyfin.Plugin.AuRatings/bin/Release/net9.0
+          zip -j ../../../../au-ratings-${{ steps.version.outputs.version }}.zip Jellyfin.Plugin.AuRatings.dll
+
+      - name: Compute checksum
+        id: checksum
+        run: |
+          echo "md5=$(md5sum au-ratings-${{ steps.version.outputs.version }}.zip | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - name: Generate manifest.json
+        run: |
+          cat > manifest.json << 'HEREDOC'
+          [
+            {
+              "guid": "b4c7d8e9-2345-6789-bcde-fa0123456789",
+              "name": "AU Ratings",
+              "overview": "Manage Australian content ratings across your Jellyfin library",
+              "description": "Dashboard for assigning AU content classifications. Auto-suggests AU equivalents for foreign ratings. Integrates with Jellyfin parental controls.",
+              "owner": "lmacka",
+              "category": "General",
+              "versions": [
+                {
+                  "version": "${{ steps.version.outputs.version }}",
+                  "changelog": "Release ${{ steps.version.outputs.version }}",
+                  "targetAbi": "10.11.0.0",
+                  "sourceUrl": "https://github.com/lmacka/jellyfin-plugin-au-ratings/releases/download/${{ steps.version.outputs.version }}/au-ratings-${{ steps.version.outputs.version }}.zip",
+                  "checksum": "${{ steps.checksum.outputs.md5 }}",
+                  "timestamp": "${{ github.event.release.published_at || github.event.repository.updated_at }}"
+                }
+              ]
+            }
+          ]
+          HEREDOC
+
+      - name: Upload release assets
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} \
+            au-ratings-${{ steps.version.outputs.version }}.zip \
+            manifest.json \
+            --clobber
+
+      - name: Upload artifacts (workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-release
+          path: |
+            au-ratings-${{ steps.version.outputs.version }}.zip
+            manifest.json
