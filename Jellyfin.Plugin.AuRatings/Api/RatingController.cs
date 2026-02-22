@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Data;
 using Jellyfin.Data.Enums;
 using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Plugin.AuRatings.Helpers;
@@ -225,6 +226,17 @@ public class RatingController : ControllerBase
             if (user is not null)
             {
                 query.User = user;
+
+                if (user.MaxParentalRatingScore.HasValue)
+                {
+                    query.MaxParentalRating = new ParentalRatingScore(user.MaxParentalRatingScore.Value, user.MaxParentalRatingSubScore);
+                }
+
+                var blockedUnratedItems = user.GetPreferenceValues<UnratedItem>(PreferenceKind.BlockUnratedItems);
+                if (blockedUnratedItems.Length > 0)
+                {
+                    query.BlockUnratedItems = blockedUnratedItems;
+                }
             }
         }
 
