@@ -338,6 +338,7 @@ public class RatingController : ControllerBase
             item.LockedFields = item.LockedFields.Append(MetadataField.OfficialRating).ToArray();
         }
 
+        item.OnMetadataChanged();
         await item.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
     }
 
@@ -345,6 +346,7 @@ public class RatingController : ControllerBase
     {
         item.OfficialRating = null;
         item.LockedFields = item.LockedFields.Where(f => f != MetadataField.OfficialRating).ToArray();
+        item.OnMetadataChanged();
         await item.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
     }
 
