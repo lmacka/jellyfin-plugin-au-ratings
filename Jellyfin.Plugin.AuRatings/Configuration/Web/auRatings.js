@@ -2,14 +2,15 @@ var currentView = 'table';
 var currentPage = 0;
 var itemsPerPage = 50;
 var searchTimeout = null;
+var activeView = null;
 
 var AU_RATINGS = [
-    { value: 'AU-G', label: 'G' },
-    { value: 'AU-PG', label: 'PG' },
-    { value: 'AU-M', label: 'M' },
-    { value: 'AU-MA 15+', label: 'MA 15+' },
-    { value: 'AU-R 18+', label: 'R 18+' },
-    { value: 'AU-X 18+', label: 'X 18+' }
+    { value: 'G', label: 'G' },
+    { value: 'PG', label: 'PG' },
+    { value: 'M', label: 'M' },
+    { value: 'MA 15+', label: 'MA 15+' },
+    { value: 'R 18+', label: 'R 18+' },
+    { value: 'X 18+', label: 'X 18+' }
 ];
 
 var PLUGIN_ID = 'b4c7d8e9-2345-6789-bcde-fa0123456789';
@@ -113,6 +114,8 @@ function renderTable(view, result) {
     result.Items.forEach(function (item) {
         var tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+        tr.style.transition = 'opacity 0.3s, background 0.15s';
+        tr.setAttribute('data-item-id', item.Id);
 
         var displayName = item.Name;
         if (item.SeriesName) {
@@ -127,7 +130,7 @@ function renderTable(view, result) {
             '<td style="padding:0.5em;"><span class="rating-buttons"></span></td>';
 
         var btnContainer = tr.querySelector('.rating-buttons');
-        renderRatingButtons(btnContainer, item);
+        renderRatingButtons(view, btnContainer, item);
         tbody.appendChild(tr);
     });
 }
@@ -139,7 +142,8 @@ function renderCards(view, result) {
 
     result.Items.forEach(function (item) {
         var card = document.createElement('div');
-        card.style.cssText = 'background:rgba(255,255,255,0.05);border-radius:8px;overflow:hidden;';
+        card.style.cssText = 'background:rgba(255,255,255,0.05);border-radius:8px;overflow:hidden;transition:opacity 0.3s, background 0.15s;';
+        card.setAttribute('data-item-id', item.Id);
 
         var imgUrl = '';
         if (item.HasPrimaryImage) {
@@ -167,12 +171,12 @@ function renderCards(view, result) {
             '</div>';
 
         var btnContainer = card.querySelector('.rating-buttons');
-        renderRatingButtons(btnContainer, item);
+        renderRatingButtons(view, btnContainer, item);
         container.appendChild(card);
     });
 }
 
-function renderRatingButtons(container, item) {
+function renderRatingButtons(view, container, item) {
     AU_RATINGS.forEach(function (ar) {
         var btn = document.createElement('button');
         btn.type = 'button';
@@ -200,9 +204,9 @@ function renderRatingButtons(container, item) {
 
         btn.addEventListener('click', function () {
             if (isActive) {
-                clearRating(item, btn, container);
+                clearRating(view, item, container);
             } else {
-                setRating(item, ar.value, btn, container);
+                setRating(view, item, ar.value, container);
             }
         });
 
@@ -210,7 +214,7 @@ function renderRatingButtons(container, item) {
     });
 }
 
-function setRating(item, rating, btn, container) {
+function setRating(view, item, rating, container) {
     disableButtons(container);
 
     apiFetch('AuRatings/SetRating', {
@@ -220,14 +224,15 @@ function setRating(item, rating, btn, container) {
         item.OfficialRating = rating;
         item.HasAuRating = true;
         item.SuggestedAuRating = null;
-        rebuildButtons(container, item);
+        rebuildButtons(view, container, item);
+        verifyItemInFilters(view, item);
     }).catch(function (err) {
         console.error('AU Ratings: failed to set rating', err);
         enableButtons(container);
     });
 }
 
-function clearRating(item, btn, container) {
+function clearRating(view, item, container) {
     disableButtons(container);
 
     apiFetch('AuRatings/ClearRating', {
@@ -237,11 +242,65 @@ function clearRating(item, btn, container) {
         item.OfficialRating = null;
         item.HasAuRating = false;
         item.SuggestedAuRating = null;
-        rebuildButtons(container, item);
+        rebuildButtons(view, container, item);
+        verifyItemInFilters(view, item);
     }).catch(function (err) {
         console.error('AU Ratings: failed to clear rating', err);
         enableButtons(container);
     });
+}
+
+function verifyItemInFilters(view, item) {
+    var qs = buildQueryString(view);
+    apiFetch('AuRatings/Items?' + qs).then(function (result) {
+        var stillPresent = result.Items.some(function (i) { return i.Id === item.Id; });
+        if (!stillPresent) {
+            var el = findItemElement(view, item.Id);
+            if (el) {
+                flashAndRemove(el, function () {
+                    if (currentView === 'table') {
+                        renderTable(view, result);
+                    } else {
+                        renderCards(view, result);
+                    }
+                    renderPagination(view, result);
+                });
+            } else {
+                if (currentView === 'table') {
+                    renderTable(view, result);
+                } else {
+                    renderCards(view, result);
+                }
+                renderPagination(view, result);
+            }
+        }
+    });
+}
+
+function findItemElement(view, itemId) {
+    if (currentView === 'table') {
+        return view.querySelector('#tableBody tr[data-item-id="' + itemId + '"]');
+    } else {
+        return view.querySelector('#cardContainer div[data-item-id="' + itemId + '"]');
+    }
+}
+
+function flashAndRemove(element, callback) {
+    var flashes = 0;
+    var maxFlashes = 3;
+    var interval = setInterval(function () {
+        if (flashes % 2 === 0) {
+            element.style.background = 'rgba(0, 164, 220, 0.15)';
+        } else {
+            element.style.background = '';
+        }
+        flashes++;
+        if (flashes >= maxFlashes * 2) {
+            clearInterval(interval);
+            element.style.opacity = '0';
+            setTimeout(callback, 300);
+        }
+    }, 150);
 }
 
 function disableButtons(container) {
@@ -260,9 +319,9 @@ function enableButtons(container) {
     }
 }
 
-function rebuildButtons(container, item) {
+function rebuildButtons(view, container, item) {
     container.innerHTML = '';
-    renderRatingButtons(container, item);
+    renderRatingButtons(view, container, item);
 }
 
 function renderPagination(view, result) {
@@ -298,6 +357,8 @@ function escapeHtml(text) {
 }
 
 export default function (view) {
+    activeView = view;
+
     view.addEventListener('viewshow', function () {
         ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
             itemsPerPage = config.ItemsPerPage || 50;
