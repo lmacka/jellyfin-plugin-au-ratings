@@ -37,10 +37,6 @@
     <EmbeddedResource Include="Configuration\Web\auRatings.html" />
     <None Remove="Configuration\Web\auRatings.js" />
     <EmbeddedResource Include="Configuration\Web\auRatings.js" />
-    <None Remove="Configuration\Web\auRatingsConfig.html" />
-    <EmbeddedResource Include="Configuration\Web\auRatingsConfig.html" />
-    <None Remove="Configuration\Web\auRatingsConfig.js" />
-    <EmbeddedResource Include="Configuration\Web\auRatingsConfig.js" />
   </ItemGroup>
 
 </Project>

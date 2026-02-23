@@ -29,6 +29,14 @@ namespace Jellyfin.Plugin.AuRatings.Api;
 [Produces(MediaTypeNames.Application.Json)]
 public class RatingController : ControllerBase
 {
+    private static readonly BaseItemKind[] DefaultItemTypes =
+    [
+        BaseItemKind.Movie,
+        BaseItemKind.Series,
+        BaseItemKind.Season,
+        BaseItemKind.Episode
+    ];
+
     private readonly ILibraryManager _libraryManager;
     private readonly IUserManager _userManager;
     private readonly ILogger<RatingController> _logger;
@@ -129,13 +137,7 @@ public class RatingController : ControllerBase
     {
         var items = _libraryManager.GetItemList(new InternalItemsQuery
         {
-            IncludeItemTypes =
-            [
-                BaseItemKind.Movie,
-                BaseItemKind.Series,
-                BaseItemKind.Season,
-                BaseItemKind.Episode
-            ],
+            IncludeItemTypes = DefaultItemTypes,
             Recursive = true
         });
 
@@ -255,13 +257,7 @@ public class RatingController : ControllerBase
     {
         if (string.IsNullOrEmpty(type))
         {
-            return
-            [
-                BaseItemKind.Movie,
-                BaseItemKind.Series,
-                BaseItemKind.Season,
-                BaseItemKind.Episode
-            ];
+            return DefaultItemTypes;
         }
 
         return type.ToUpperInvariant() switch
@@ -270,13 +266,7 @@ public class RatingController : ControllerBase
             "SERIES" => [BaseItemKind.Series],
             "SEASON" => [BaseItemKind.Season],
             "EPISODE" => [BaseItemKind.Episode],
-            _ =>
-            [
-                BaseItemKind.Movie,
-                BaseItemKind.Series,
-                BaseItemKind.Season,
-                BaseItemKind.Episode
-            ]
+            _ => DefaultItemTypes
         };
     }
 

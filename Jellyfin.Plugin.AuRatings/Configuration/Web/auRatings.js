@@ -2,7 +2,6 @@ var currentView = 'table';
 var currentPage = 0;
 var itemsPerPage = 50;
 var searchTimeout = null;
-var activeView = null;
 
 var AU_RATINGS = [
     { value: 'G', label: 'G' },
@@ -92,14 +91,7 @@ function loadItems(view) {
     var qs = buildQueryString(view);
     apiFetch('AuRatings/Items?' + qs).then(function (result) {
         view.querySelector('#loadingIndicator').style.display = 'none';
-
-        if (currentView === 'table') {
-            renderTable(view, result);
-        } else {
-            renderCards(view, result);
-        }
-
-        renderPagination(view, result);
+        renderResult(view, result);
     }).catch(function (err) {
         view.querySelector('#loadingIndicator').style.display = 'none';
         console.error('AU Ratings: failed to load items', err);
@@ -250,6 +242,15 @@ function clearRating(view, item, container) {
     });
 }
 
+function renderResult(view, result) {
+    if (currentView === 'table') {
+        renderTable(view, result);
+    } else {
+        renderCards(view, result);
+    }
+    renderPagination(view, result);
+}
+
 function verifyItemInFilters(view, item) {
     var qs = buildQueryString(view);
     apiFetch('AuRatings/Items?' + qs).then(function (result) {
@@ -258,20 +259,10 @@ function verifyItemInFilters(view, item) {
             var el = findItemElement(view, item.Id);
             if (el) {
                 flashAndRemove(el, function () {
-                    if (currentView === 'table') {
-                        renderTable(view, result);
-                    } else {
-                        renderCards(view, result);
-                    }
-                    renderPagination(view, result);
+                    renderResult(view, result);
                 });
             } else {
-                if (currentView === 'table') {
-                    renderTable(view, result);
-                } else {
-                    renderCards(view, result);
-                }
-                renderPagination(view, result);
+                renderResult(view, result);
             }
         }
     });
@@ -357,8 +348,6 @@ function escapeHtml(text) {
 }
 
 export default function (view) {
-    activeView = view;
-
     view.addEventListener('viewshow', function () {
         ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
             itemsPerPage = config.ItemsPerPage || 50;

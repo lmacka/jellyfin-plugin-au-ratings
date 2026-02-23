@@ -45,16 +45,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             },
             new PluginPageInfo
             {
-                Name = "auratingsconfig",
-                EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.Web.auRatingsConfig.html", ns)
-            },
-            new PluginPageInfo
-            {
-                Name = "auratingsconfigjs",
-                EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.Web.auRatingsConfig.js", ns)
-            },
-            new PluginPageInfo
-            {
                 Name = Name,
                 EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.configPage.html", ns)
             }
