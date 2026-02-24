@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: coopernetes
+    env:
+      DOTNET_INSTALL_DIR: /home/runner/.dotnet
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
